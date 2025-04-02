@@ -3,6 +3,7 @@ import './globals.css';
 import { ReactNode } from 'react';
 import { Metadata } from 'next';
 import TanstackQueryProvider from '@/components/common/TanstackQueryProvider';
+import MswComponent from '@/components/common/MswComponent';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -27,7 +28,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <TanstackQueryProvider>{children}</TanstackQueryProvider>
+        <MswComponent>
+          <TanstackQueryProvider>{children}</TanstackQueryProvider>
+        </MswComponent>
       </body>
     </html>
   );

@@ -1,6 +1,0 @@
-export async function register() {
-  if (process.env.NEXT_RUNTIME === 'nodejs') {
-    const { server } = await import('./utils/mocks/server');
-    server.listen();
-  }
-}

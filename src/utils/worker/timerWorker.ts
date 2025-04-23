@@ -5,7 +5,7 @@ export const TimerDefine = {
 export type TimerType = (typeof TimerDefine)[keyof typeof TimerDefine];
 
 let sec = 0;
-let intervalId = null;
+let intervalId: NodeJS.Timeout | null = null;
 const handleMessage = (event: MessageEvent<TimerType>) => {
   if (event.data === TimerDefine.START) {
     intervalId = setInterval(() => {

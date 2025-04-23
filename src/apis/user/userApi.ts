@@ -11,4 +11,6 @@ export const getUserInfo = async (): Promise<UserInfo> => {
   } catch (err) {
     console.error(err);
   }
+
+  throw 'Failed to fetch user info';
 };

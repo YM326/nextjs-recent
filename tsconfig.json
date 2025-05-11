@@ -28,6 +28,9 @@
       "@defines/*": [
         "./src/defines/*"
       ],
+      "@stores/*": [
+        "./src/stores/*"
+      ],
       "@utils/*": [
         "./src/utils/*"
       ],

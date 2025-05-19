@@ -3,6 +3,7 @@
 import { LayoutDefines } from '@defines/layoutDefines';
 import { commonFont } from '@utils/font';
 import { useRouter } from 'next/navigation';
+import { Color } from '@defines/common/color';
 
 const snbItems = [
   {
@@ -48,6 +49,7 @@ export default function HomeSnb() {
           width: ${LayoutDefines.SIDEBAR_WIDTH}px;
           border-left: 1px solid rgba(0, 0, 0, 0.1);
           padding: 100px 30px;
+          background: ${Color.WHITE};
         }
 
         ul {

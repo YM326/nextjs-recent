@@ -8,7 +8,7 @@ export default function TimerView() {
   const timerRef = useRef<Worker | null>(null);
 
   useEffect(() => {
-    timerRef.current = new Worker(new URL('../../utils/worker/timerWorker.ts', import.meta.url));
+    timerRef.current = new Worker(new URL('../../../utils/worker/timerWorker.ts', import.meta.url));
 
     const handleMessage = (event: MessageEvent<number>) => {
       setTime(event.data);

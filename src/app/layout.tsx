@@ -31,6 +31,7 @@ export default function RootLayout({
         <TanstackQueryProvider>
           <StyledJsxRegistry>
             <MswComponent>
+              <div id="portal" />
               {children}
               <HomeSnb />
             </MswComponent>

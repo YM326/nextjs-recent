@@ -11,6 +11,11 @@ export const studyDefines: StudyInfo[] = [
     href: '/timer',
   },
   {
+    title: 'Editor',
+    description: '커스텀 에디터 구현한 예시',
+    href: '/editor',
+  },
+  {
     title: 'Test',
     description: '테스트를 위한 페이지',
     href: '/test',

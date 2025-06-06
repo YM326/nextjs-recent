@@ -22,6 +22,7 @@ export default function WritingArea(props: WritingAreaProps) {
   const undoStack = useRef<string[]>(['']);
   const redoStack = useRef<string[]>([]);
   const [isComposing, setIsComposing] = useState(false);
+  const hasWrapped = useRef(false);
 
   const pushHistory = useCallback((current: string) => {
     undoStack.current.push(current);
@@ -46,39 +47,68 @@ export default function WritingArea(props: WritingAreaProps) {
     preRange.selectNodeContents(container);
     preRange.setEnd(range.startContainer, range.startOffset);
 
-    return preRange.toString().length;
+    return preRange.endOffset !== 0 ? preRange.toString().length : -1;
+  };
+
+  const getLength = () => {
+    const editor = editorRef.current;
+    if (!editor) return 0;
+
+    let length = 0;
+    editor.childNodes.forEach((node, index) => {
+      length += index > 0 ? node.textContent.length + 1 : node.textContent.length;
+    });
+
+    return length;
   };
 
   const restoreCaretPosition = (container: HTMLElement, charIndex: number) => {
-    container.focus();
     const sel = window.getSelection();
     if (!sel) return;
 
-    const nodeStack = [container];
-    let node: Node | undefined;
+    container.focus();
+
+    const nodeStack = [{ node: container, index: 0 }];
+    let nodeInfo: { node: Node; index: number } | undefined;
     let accumulated = 0;
     let found = false;
     const range = document.createRange();
 
+    if (charIndex + 1 === getLength()) {
+      range.selectNodeContents(container);
+      range.collapse(false);
+      sel?.removeAllRanges();
+      sel?.addRange(range);
+      found = true;
+    }
+
     // eslint-disable-next-line no-cond-assign
-    while (!found && (node = nodeStack.pop())) {
-      if (node.nodeType === Node.TEXT_NODE) {
-        console.log(node, node.textContent);
-        const textLen = (node.textContent || '').length;
+    while (!found && (nodeInfo = nodeStack.pop())) {
+      if (nodeInfo.node.nodeType === Node.TEXT_NODE) {
+        const textLen = (nodeInfo.node.textContent || '').length;
         if (accumulated + textLen >= charIndex) {
-          range.setStart(node, charIndex - accumulated);
-          range.collapse(true);
+          if (nodeInfo.node.parentNode.nodeName === 'A') {
+            let { parentNode } = nodeInfo.node.parentNode;
+            if (parentNode === editorRef.current) {
+              parentNode = nodeInfo.node.parentNode;
+            }
+
+            range.setStart(parentNode, nodeInfo.index + 1);
+          } else {
+            range.setStart(nodeInfo.node, charIndex - accumulated);
+            range.collapse(true);
+          }
+
           found = true;
         } else {
           accumulated += textLen;
         }
       } else {
-        for (let i = node.childNodes.length - 1; i >= 0; i--) {
-          nodeStack.push(node.childNodes[i] as HTMLElement);
+        for (let i = nodeInfo.node.childNodes.length - 1; i >= 0; i--) {
+          nodeStack.push({ node: nodeInfo.node.childNodes[i] as HTMLElement, index: i + 1 });
         }
       }
     }
-    console.log(charIndex, found, range);
 
     if (found) {
       sel.removeAllRanges();
@@ -94,18 +124,6 @@ export default function WritingArea(props: WritingAreaProps) {
     range.collapse(false);
     sel?.removeAllRanges();
     sel?.addRange(range);
-  };
-
-  const getLength = () => {
-    const editor = editorRef.current;
-    if (!editor) return 0;
-
-    let length = 0;
-    editor.childNodes.forEach((node, index) => {
-      length += index > 0 ? node.textContent!.length + 1 : node.textContent!.length;
-    });
-
-    return length;
   };
 
   const undo = useCallback(() => {
@@ -180,16 +198,19 @@ export default function WritingArea(props: WritingAreaProps) {
       if (isComposing) return;
 
       const editor = editorRef.current!;
+
       const pos = saveCaretPosition(editor);
 
       Array.from(editor.childNodes).forEach((child) => linkifyNode(child));
 
+      if (undoStack.current.length === 0 || undoStack.current[undoStack.current.length - 1] !== editor.innerHTML) {
+        pushHistory(editor.innerHTML);
+      }
+
       onChange(editor.innerHTML);
-      console.log(pos);
 
       if (!isBlur) {
-        restoreCaretPosition(editor, pos);
-        // placeCaretAtEnd(editor);
+        if (pos !== -1) restoreCaretPosition(editor, pos);
       }
     },
     [isComposing, onChange],
@@ -197,8 +218,8 @@ export default function WritingArea(props: WritingAreaProps) {
 
   const clearIfEmpty = useCallback(() => {
     if (!editorRef.current) return;
-    if (editorRef.current?.innerText.trim() === '') {
-      editorRef.current!.innerHTML = '';
+    if (editorRef.current.innerText.trim() === '') {
+      editorRef.current.innerHTML = '';
       onChange('');
     }
   }, [onChange]);
@@ -206,8 +227,8 @@ export default function WritingArea(props: WritingAreaProps) {
   const handlePaste = (e: ClipboardEvent<HTMLDivElement>) => {
     e.preventDefault();
 
-    if (undoStack.current[undoStack.current.length - 1] !== editorRef.current!.innerHTML) {
-      pushHistory(editorRef.current!.innerHTML);
+    if (undoStack.current[undoStack.current.length - 1] !== editorRef.current.innerHTML) {
+      pushHistory(editorRef.current.innerHTML);
     }
 
     const text = e.clipboardData.getData('text/plain');
@@ -215,11 +236,9 @@ export default function WritingArea(props: WritingAreaProps) {
     if (!selection || selection.rangeCount === 0) return;
 
     const currLen = getLength();
-    if (limit) {
-      const allowed = limit - (currLen - selection.toString().length) - text.length;
-      if (allowed <= 0) {
-        return;
-      }
+    const allowed = limit - (currLen - selection.toString().length) - text.length;
+    if (allowed <= 0) {
+      return;
     }
 
     const range = selection.getRangeAt(0);
@@ -243,6 +262,20 @@ export default function WritingArea(props: WritingAreaProps) {
     }
   };
 
+  const selectionDelete = () => {
+    const sel = window.getSelection();
+
+    const range = sel.getRangeAt(0);
+    range.deleteContents();
+
+    const newRange = document.createRange();
+    newRange.setStart(range.startContainer, range.startOffset);
+    newRange.collapse(true);
+
+    sel.removeAllRanges();
+    sel.addRange(newRange);
+  };
+
   const handleBeforeInput = (e: FormEvent<HTMLDivElement>) => {
     const ie = e.nativeEvent as unknown as InputEvent | KeyboardEvent;
 
@@ -254,10 +287,12 @@ export default function WritingArea(props: WritingAreaProps) {
 
     if (ie instanceof KeyboardEvent) {
       if (ie.key === ' ') {
+        selectionDelete();
         convertLinks(false);
         clearIfEmpty();
       }
     } else if (ie.data === '\n') {
+      selectionDelete();
       convertLinks(false);
       clearIfEmpty();
     }
@@ -265,6 +300,20 @@ export default function WritingArea(props: WritingAreaProps) {
 
   const handleInput = () => {
     setCount(getLength());
+
+    if (!hasWrapped.current && editorRef.current) {
+      const editor = editorRef.current;
+      const textNode = editor.firstChild;
+      if (textNode && textNode.nodeType === Node.TEXT_NODE) {
+        const text = (textNode as Text).textContent || '';
+        const wrapper = document.createElement('div');
+        wrapper.textContent = text;
+        editor.replaceChild(wrapper, textNode);
+        hasWrapped.current = true;
+      }
+
+      placeCaretAtEnd(editor);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {

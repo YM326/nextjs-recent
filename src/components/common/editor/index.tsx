@@ -56,7 +56,7 @@ export default function WritingArea(props: WritingAreaProps) {
 
     let length = 0;
     editor.childNodes.forEach((node, index) => {
-      length += index > 0 ? node.textContent.length + 1 : node.textContent.length;
+      length += index > 0 ? node.textContent!.length + 1 : node.textContent!.length;
     });
 
     return length;
@@ -87,13 +87,13 @@ export default function WritingArea(props: WritingAreaProps) {
       if (nodeInfo.node.nodeType === Node.TEXT_NODE) {
         const textLen = (nodeInfo.node.textContent || '').length;
         if (accumulated + textLen >= charIndex) {
-          if (nodeInfo.node.parentNode.nodeName === 'A') {
+          if (nodeInfo.node.parentNode?.nodeName === 'A') {
             let { parentNode } = nodeInfo.node.parentNode;
             if (parentNode === editorRef.current) {
               parentNode = nodeInfo.node.parentNode;
             }
 
-            range.setStart(parentNode, nodeInfo.index + 1);
+            if (parentNode) range.setStart(parentNode, nodeInfo.index + 1);
           } else {
             range.setStart(nodeInfo.node, charIndex - accumulated);
             range.collapse(true);
@@ -210,7 +210,7 @@ export default function WritingArea(props: WritingAreaProps) {
       onChange(editor.innerHTML);
 
       if (!isBlur) {
-        if (pos !== -1) restoreCaretPosition(editor, pos);
+        if (pos && pos !== -1) restoreCaretPosition(editor, pos);
       }
     },
     [isComposing, onChange],
@@ -227,18 +227,20 @@ export default function WritingArea(props: WritingAreaProps) {
   const handlePaste = (e: ClipboardEvent<HTMLDivElement>) => {
     e.preventDefault();
 
-    if (undoStack.current[undoStack.current.length - 1] !== editorRef.current.innerHTML) {
-      pushHistory(editorRef.current.innerHTML);
+    if (undoStack.current[undoStack.current.length - 1] !== editorRef.current!.innerHTML) {
+      pushHistory(editorRef.current!.innerHTML);
     }
 
     const text = e.clipboardData.getData('text/plain');
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) return;
 
-    const currLen = getLength();
-    const allowed = limit - (currLen - selection.toString().length) - text.length;
-    if (allowed <= 0) {
-      return;
+    if (limit) {
+      const currLen = getLength();
+      const allowed = limit - (currLen - selection.toString().length) - text.length;
+      if (allowed <= 0) {
+        return;
+      }
     }
 
     const range = selection.getRangeAt(0);
@@ -264,6 +266,7 @@ export default function WritingArea(props: WritingAreaProps) {
 
   const selectionDelete = () => {
     const sel = window.getSelection();
+    if (!sel) return;
 
     const range = sel.getRangeAt(0);
     range.deleteContents();

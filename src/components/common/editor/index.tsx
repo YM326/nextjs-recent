@@ -38,16 +38,36 @@ export default function WritingArea(props: WritingAreaProps) {
     }
   }, [value]);
 
-  const saveCaretPosition = (container: HTMLElement) => {
+  const insertCaretMarker = () => {
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0) return null;
 
     const range = sel.getRangeAt(0).cloneRange();
-    const preRange = range.cloneRange();
-    preRange.selectNodeContents(container);
-    preRange.setEnd(range.startContainer, range.startOffset);
+    const marker = document.createElement('span');
+    marker.setAttribute('data-caret-marker', '');
+    marker.textContent = '\u200b';
+    range.insertNode(marker);
 
-    return preRange.endOffset !== 0 ? preRange.toString().length : -1;
+    range.setStartAfter(marker);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  };
+
+  const restoreCaretFromMarker = (container: HTMLElement) => {
+    const sel = window.getSelection();
+    if (!sel) return;
+
+    const marker = container.querySelector('span[data-caret-marker]');
+    if (!marker) return;
+
+    const range = document.createRange();
+    range.setStartAfter(marker);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    marker.remove();
   };
 
   const getLength = () => {
@@ -60,60 +80,6 @@ export default function WritingArea(props: WritingAreaProps) {
     });
 
     return length;
-  };
-
-  const restoreCaretPosition = (container: HTMLElement, charIndex: number) => {
-    const sel = window.getSelection();
-    if (!sel) return;
-
-    container.focus();
-
-    const nodeStack = [{ node: container, index: 0 }];
-    let nodeInfo: { node: Node; index: number } | undefined;
-    let accumulated = 0;
-    let found = false;
-    const range = document.createRange();
-
-    if (charIndex + 1 === getLength()) {
-      range.selectNodeContents(container);
-      range.collapse(false);
-      sel?.removeAllRanges();
-      sel?.addRange(range);
-      found = true;
-    }
-
-    // eslint-disable-next-line no-cond-assign
-    while (!found && (nodeInfo = nodeStack.pop())) {
-      if (nodeInfo.node.nodeType === Node.TEXT_NODE) {
-        const textLen = (nodeInfo.node.textContent || '').length;
-        if (accumulated + textLen >= charIndex) {
-          if (nodeInfo.node.parentNode?.nodeName === 'A') {
-            let { parentNode } = nodeInfo.node.parentNode;
-            if (parentNode === editorRef.current) {
-              parentNode = nodeInfo.node.parentNode;
-            }
-
-            if (parentNode) range.setStart(parentNode, nodeInfo.index + 1);
-          } else {
-            range.setStart(nodeInfo.node, charIndex - accumulated);
-            range.collapse(true);
-          }
-
-          found = true;
-        } else {
-          accumulated += textLen;
-        }
-      } else {
-        for (let i = nodeInfo.node.childNodes.length - 1; i >= 0; i--) {
-          nodeStack.push({ node: nodeInfo.node.childNodes[i] as HTMLElement, index: i + 1 });
-        }
-      }
-    }
-
-    if (found) {
-      sel.removeAllRanges();
-      sel.addRange(range);
-    }
   };
 
   const placeCaretAtEnd = (el: HTMLElement) => {
@@ -193,28 +159,23 @@ export default function WritingArea(props: WritingAreaProps) {
     }
   }, []);
 
-  const convertLinks = useCallback(
-    (isBlur: boolean) => {
-      if (isComposing) return;
+  const convertLinks = useCallback(() => {
+    if (isComposing) return;
 
-      const editor = editorRef.current!;
+    const editor = editorRef.current!;
 
-      const pos = saveCaretPosition(editor);
+    insertCaretMarker();
 
-      Array.from(editor.childNodes).forEach((child) => linkifyNode(child));
+    Array.from(editor.childNodes).forEach((child) => linkifyNode(child));
 
-      if (undoStack.current.length === 0 || undoStack.current[undoStack.current.length - 1] !== editor.innerHTML) {
-        pushHistory(editor.innerHTML);
-      }
+    if (undoStack.current.length === 0 || undoStack.current[undoStack.current.length - 1] !== editor.innerHTML) {
+      pushHistory(editor.innerHTML);
+    }
 
-      onChange(editor.innerHTML);
+    restoreCaretFromMarker(editor);
 
-      if (!isBlur) {
-        if (pos && pos !== -1) restoreCaretPosition(editor, pos);
-      }
-    },
-    [isComposing, onChange],
-  );
+    onChange(editor.innerHTML);
+  }, [isComposing, onChange]);
 
   const clearIfEmpty = useCallback(() => {
     if (!editorRef.current) return;
@@ -259,7 +220,6 @@ export default function WritingArea(props: WritingAreaProps) {
 
   const handleBlur = () => {
     if (!isComposing) {
-      convertLinks(true);
       clearIfEmpty();
     }
   };
@@ -291,12 +251,12 @@ export default function WritingArea(props: WritingAreaProps) {
     if (ie instanceof KeyboardEvent) {
       if (ie.key === ' ') {
         selectionDelete();
-        convertLinks(false);
+        convertLinks();
         clearIfEmpty();
       }
     } else if (ie.data === '\n') {
       selectionDelete();
-      convertLinks(false);
+      convertLinks();
       clearIfEmpty();
     }
   };
@@ -337,7 +297,7 @@ export default function WritingArea(props: WritingAreaProps) {
   const handleCompositionEnd = (_e: CompositionEvent) => {
     setIsComposing(false);
 
-    convertLinks(false);
+    convertLinks();
     clearIfEmpty();
   };
 

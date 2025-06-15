@@ -273,9 +273,9 @@ export default function WritingArea(props: WritingAreaProps) {
         wrapper.textContent = text;
         editor.replaceChild(wrapper, textNode);
         hasWrapped.current = true;
-      }
 
-      placeCaretAtEnd(editor);
+        placeCaretAtEnd(editor);
+      }
     }
   };
 

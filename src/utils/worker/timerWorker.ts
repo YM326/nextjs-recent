@@ -8,12 +8,13 @@ let sec = 0;
 let intervalId: NodeJS.Timeout | null = null;
 const handleMessage = (event: MessageEvent<TimerType>) => {
   if (event.data === TimerDefine.START) {
+    if (intervalId) return;
+
     intervalId = setInterval(() => {
       sec += 1;
       postMessage(sec);
     }, 1000);
   } else if (event.data === TimerDefine.STOP) {
-    console.log('stop', intervalId);
     if (intervalId) {
       clearInterval(intervalId);
       intervalId = null;

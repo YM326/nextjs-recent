@@ -10,10 +10,7 @@ export default function TestView() {
     <>
       <span>{userInfo?.firstName}</span>
       <span>{userInfo?.lastName}</span>
-      <Carousel>
-        <div>abc</div>
-        <div>efg</div>
-      </Carousel>
+      <Carousel />
     </>
   );
 }

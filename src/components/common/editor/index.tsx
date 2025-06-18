@@ -215,6 +215,7 @@ export default function WritingArea(props: WritingAreaProps) {
     selection.removeAllRanges();
     selection.addRange(range);
 
+    onChange(editorRef.current.innerHTML);
     setCount(getLength());
   };
 

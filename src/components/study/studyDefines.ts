@@ -21,6 +21,11 @@ export const studyDefines: StudyInfo[] = [
     href: '/carousel',
   },
   {
+    title: 'Virtual Scroll',
+    description: '가상 스크롤 예시',
+    href: '/virtual-scroll',
+  },
+  {
     title: 'Test',
     description: '테스트를 위한 페이지',
     href: '/test',

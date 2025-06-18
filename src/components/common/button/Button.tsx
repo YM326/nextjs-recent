@@ -1,3 +1,5 @@
+'use client';
+
 import { ButtonHTMLAttributes, Ref } from 'react';
 import { ButtonSize, ButtonStyle, ButtonVariant } from '@components/common/button/buttonDefines';
 import classNames from 'classnames';

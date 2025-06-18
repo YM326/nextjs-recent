@@ -1,24 +1,32 @@
+'use client';
+
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 
-export default function Carousel() {
-  const [currentIndex, setCurrentIndex] = useState(0);
+interface CarouselProps {
+  items: string[];
+}
+
+export default function Carousel({ items }: CarouselProps) {
+  const [currentIndex, setCurrentIndex] = useState(1);
   const carouselRef = useRef<HTMLDivElement>(null);
-  const images = ['/assets/test3.jpg', '/assets/test.jpg', '/assets/test2.jpg', '/assets/test3.jpg', '/assets/test.jpg'];
+  const [carouselItems, setCarouselItems] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (items.length !== 0) {
+      const startData = items[0];
+      const endData = items[items.length - 1];
+      const newList = [endData, ...items, startData];
+
+      setCarouselItems(newList);
+    }
+  }, [items]);
 
   useEffect(() => {
     if (carouselRef.current !== null) {
       carouselRef.current.style.transform = `translateX(-${currentIndex * 800}px)`;
     }
   }, [currentIndex]);
-
-  const goToNext = () => {
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
-  };
-
-  const goToPrev = () => {
-    setCurrentIndex((prevIndex) => (prevIndex - 1 + images.length) % images.length);
-  };
 
   const moveToNthSlide = (index: number) => {
     setTimeout(() => {
@@ -32,10 +40,10 @@ export default function Carousel() {
   const handleSwipe = (direction: number) => {
     const newIndex = currentIndex + direction;
 
-    if (newIndex === 4) {
+    if (newIndex === items.length + 1) {
       moveToNthSlide(1);
     } else if (newIndex === 0) {
-      moveToNthSlide(3);
+      moveToNthSlide(items.length);
     }
 
     setCurrentIndex((prev) => prev + direction);
@@ -51,9 +59,9 @@ export default function Carousel() {
           &#10094;
         </button>
         <div className="carousel-images" ref={carouselRef}>
-          {images.map((image, index) => (
+          {carouselItems.map((carouselItem, index) => (
             <div key={index}>
-              <Image src={image} alt={`Slide ${index + 1}`} width={800} height={500} />
+              <Image src={carouselItem} alt={`Slide ${index + 1}`} width={800} height={500} />
             </div>
           ))}
         </div>
@@ -73,8 +81,6 @@ export default function Carousel() {
 
         .carousel-images {
           display: flex;
-          //transition: transform 0.5s ease-in-out;
-          // transform: translateX(-${currentIndex * 800}px);
         }
 
         button {

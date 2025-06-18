@@ -1,3 +1,5 @@
+'use client';
+
 import { useCallback, useRef, useEffect, ClipboardEvent, useState, CompositionEvent, FormEvent } from 'react';
 import { Size } from '@defines/common/cssType';
 import { Color } from '@defines/common/color';

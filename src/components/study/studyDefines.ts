@@ -16,6 +16,11 @@ export const studyDefines: StudyInfo[] = [
     href: '/editor',
   },
   {
+    title: 'Carousel',
+    description: '캐러셀 구현한 예시',
+    href: '/carousel',
+  },
+  {
     title: 'Test',
     description: '테스트를 위한 페이지',
     href: '/test',

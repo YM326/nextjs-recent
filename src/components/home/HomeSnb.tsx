@@ -7,6 +7,11 @@ import { Color } from '@defines/common/color';
 
 const snbItems = [
   {
+    title: 'Home',
+    href: '/',
+    name: '홈',
+  },
+  {
     title: 'Study',
     href: '/study',
     name: '스터디',

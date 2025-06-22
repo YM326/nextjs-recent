@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { TimerDefine } from '@utils/worker/timerWorker';
+import { Button } from '@components/common/button/Button';
+import { commonFont } from '@utils/font';
 
 export default function TimerView() {
   const [time, setTime] = useState(0);
@@ -35,9 +37,25 @@ export default function TimerView() {
 
   return (
     <>
-      <span>{time}</span>
-      <button onClick={handleClickStartTimer}>Timer Start</button>
-      <button onClick={handleClickStopTimer}>Timer Stop</button>
+      <div className={'timer-wrapper'}>
+        <span>{time}</span>
+        <Button onClick={handleClickStartTimer}>Timer Start</Button>
+        <Button onClick={handleClickStopTimer}>Timer Stop</Button>
+      </div>
+      <style jsx>{`
+        .timer-wrapper {
+          height: 100vh;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+
+          span {
+            ${commonFont('50px', 700)};
+          }
+        }
+      `}</style>
     </>
   );
 }

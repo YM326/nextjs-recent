@@ -18,7 +18,7 @@ export function Button(props: ButtonProps) {
   const {
     variant = 'primary',
     buttonStyle = 'fill',
-    buttonSize = 'big',
+    buttonSize = 'medium',
     className,
     children,
     inProgress = false,

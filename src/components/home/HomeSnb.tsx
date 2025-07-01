@@ -4,27 +4,39 @@ import { LayoutDefines } from '@defines/layoutDefines';
 import { commonFont } from '@utils/font';
 import { useRouter } from 'next/navigation';
 import { Color } from '@defines/common/color';
+import { useMediaQuery } from 'react-responsive';
 
-const snbItems = [
+interface SnbItem {
+  title: string;
+  href: string;
+  name: string;
+  icon: string;
+}
+
+const snbItems: SnbItem[] = [
   {
     title: 'Home',
     href: '/',
     name: '홈',
+    icon: 'h',
   },
   {
     title: 'Study',
     href: '/study',
     name: '스터디',
+    icon: 's',
   },
   {
     title: 'etc',
     href: '/etc',
     name: '이것저것',
+    icon: 'e',
   },
 ];
 
 export default function HomeSnb() {
   const router = useRouter();
+  const is743 = useMediaQuery({ maxWidth: 743 });
 
   const handleClickSnbItem = (href: string) => {
     router.push(href);
@@ -37,7 +49,7 @@ export default function HomeSnb() {
           {snbItems.map((snbItem) => {
             return (
               <li key={snbItem.title} onClick={() => handleClickSnbItem(snbItem.href)}>
-                {snbItem.name}
+                {is743 ? snbItem.icon : snbItem.name}
               </li>
             );
           })}
@@ -66,6 +78,12 @@ export default function HomeSnb() {
         li {
           ${commonFont('20px', 700)}
           cursor: pointer;
+        }
+
+        @media (max-width: 743px) {
+          aside {
+            width: ${LayoutDefines.MINI_SIDEBAR_WIDTH}px;
+          }
         }
       `}</style>
     </>

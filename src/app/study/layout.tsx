@@ -12,6 +12,12 @@ export default function StudyLayout({ children }: { children: ReactNode }) {
           height: 100vh;
           margin-right: ${LayoutDefines.SIDEBAR_WIDTH}px;
         }
+
+        @media (max-width: 743px) {
+          main {
+            margin-right: ${LayoutDefines.MINI_SIDEBAR_WIDTH}px;
+          }
+        }
       `}</style>
     </>
   );

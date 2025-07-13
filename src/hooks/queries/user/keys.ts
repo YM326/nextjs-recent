@@ -1,4 +1,4 @@
 export const userKeys = {
   all: ['user'],
-  getUserInfo: () => [...userKeys.all, 'get'],
+  getUserInfo: () => [...userKeys.all, 'info'],
 };

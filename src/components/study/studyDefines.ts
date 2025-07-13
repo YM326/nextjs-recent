@@ -26,6 +26,11 @@ export const studyDefines: StudyInfo[] = [
     href: '/virtual-scroll',
   },
   {
+    title: 'Infinite Scroll',
+    description: '무한 스크롤 예시',
+    href: '/infinite-scroll',
+  },
+  {
     title: 'Test',
     description: '테스트를 위한 페이지',
     href: '/test',

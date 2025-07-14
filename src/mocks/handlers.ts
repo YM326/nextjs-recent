@@ -26,6 +26,8 @@ export const handlers = [
     });
   }),
   http.get('/api/randomnumbers', async ({ request }) => {
+    if (!request.url) return;
+
     const url = new URL(request.url);
     const page = Number(url.searchParams.get('page'));
 

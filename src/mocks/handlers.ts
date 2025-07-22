@@ -1,4 +1,4 @@
-import { http, HttpResponse } from 'msw';
+import { delay, http, HttpResponse } from 'msw';
 
 const generateRandomData = (page: number, length: number): { id: number; count: number }[] => {
   const data = [];
@@ -18,6 +18,9 @@ const isErrorRandomly = (threshold: number) => {
 };
 
 export const handlers = [
+  http.all('*', async () => {
+    await delay(100);
+  }),
   http.get('/api/usertest', async () => {
     return HttpResponse.json({
       id: 1,
